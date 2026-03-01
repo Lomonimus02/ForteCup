@@ -9,11 +9,10 @@ import type { SerializedProduct } from "@/types";
 
 export default async function HomePage() {
   // ── Parallel data fetching ──
-  const [settings, categories, products] = await Promise.all([
+  const [settings, allRootCategories, products] = await Promise.all([
     getSiteSettings(),
     prisma.category.findMany({
       where: { parentId: null },
-      take: 4,
       select: { id: true, name: true, slug: true, imageUrl: true },
     }),
     prisma.product.findMany({
@@ -22,6 +21,24 @@ export default async function HomePage() {
       take: 8,
     }),
   ]);
+
+  // ── Resolve homepage categories (admin-picked or fallback first 4) ──
+  let homepageCatIds: string[] = [];
+  try {
+    const raw = settings.homepageCategoryIds;
+    if (raw) homepageCatIds = JSON.parse(raw) as string[];
+  } catch { /* ignore */ }
+
+  let categories: typeof allRootCategories;
+  if (homepageCatIds.length > 0) {
+    // Keep admin-defined order
+    const catMap = new Map(allRootCategories.map((c) => [c.id, c]));
+    categories = homepageCatIds
+      .map((id) => catMap.get(id))
+      .filter((c): c is NonNullable<typeof c> => c != null);
+  } else {
+    categories = allRootCategories.slice(0, 4);
+  }
 
   // ── Settings with fallbacks ──
   const heroTitle = settings.heroTitle ?? SETTINGS_FALLBACKS.heroTitle;

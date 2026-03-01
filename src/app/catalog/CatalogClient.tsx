@@ -16,7 +16,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -88,6 +88,89 @@ interface CatalogClientProps {
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name" | "newest";
 
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "default", label: "По умолчанию" },
+  { value: "price-asc", label: "Цена ↑" },
+  { value: "price-desc", label: "Цена ↓" },
+  { value: "name", label: "По названию" },
+  { value: "newest", label: "Новинки" },
+];
+
+function SortDropdown({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const current = SORT_OPTIONS.find((o) => o.value === value) ?? SORT_OPTIONS[0];
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 rounded-full border-2 border-dark bg-white px-5 py-2.5 text-xs font-bold uppercase transition-colors hover:border-accent"
+      >
+        {current.label}
+        <svg
+          width="10"
+          height="6"
+          viewBox="0 0 10 6"
+          fill="none"
+          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute right-0 top-full z-50 mt-2 min-w-[200px] overflow-hidden border-2 border-dark bg-white/95 backdrop-blur-xl"
+            style={{ borderRadius: "var(--radius-apple)" }}
+          >
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex w-full items-center gap-2 px-5 py-3 text-left text-xs font-bold uppercase tracking-wide transition-colors hover:bg-accent hover:text-dark",
+                  option.value === value
+                    ? "bg-accent/20 text-dark"
+                    : "text-dark/70"
+                )}
+              >
+                {option.value === value && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-dark" />
+                )}
+                {option.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function CatalogClient({
   products,
   categories,
@@ -152,6 +235,29 @@ export function CatalogClient({
     activeFilters.maxPrice !== undefined ||
     activeFilters.inStock ||
     activeFilters.search;
+
+  // ── Ползунок цены: локальное состояние + debounce ──
+  const priceStep = Math.max(50, Math.round((priceRange[1] - priceRange[0]) / 50 / 50) * 50) || 50;
+  const [localMaxPrice, setLocalMaxPrice] = useState(
+    activeFilters.maxPrice ?? priceRange[1]
+  );
+  const priceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handlePriceChange = useCallback(
+    (val: number) => {
+      setLocalMaxPrice(val);
+      if (priceTimerRef.current) clearTimeout(priceTimerRef.current);
+      priceTimerRef.current = setTimeout(() => {
+        updateFilter("maxPrice", val >= priceRange[1] ? undefined : String(val));
+      }, 400);
+    },
+    [updateFilter, priceRange]
+  );
+
+  // Синхронизация при изменении серверных фильтров
+  useEffect(() => {
+    setLocalMaxPrice(activeFilters.maxPrice ?? priceRange[1]);
+  }, [activeFilters.maxPrice, priceRange]);
 
   // ──────────────────────────────────────────────
   // Панель фильтров (переиспользуется для desktop и mobile)
@@ -250,21 +356,15 @@ export function CatalogClient({
       <div>
         <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-dark/50">
           Цена до{" "}
-          {formatPrice(activeFilters.maxPrice ?? priceRange[1])}
+          {formatPrice(localMaxPrice)}
         </h3>
         <input
           type="range"
           min={priceRange[0]}
           max={priceRange[1]}
-          step={50}
-          defaultValue={activeFilters.maxPrice ?? priceRange[1]}
-          onChange={(e) => {
-            const val = Number(e.target.value);
-            updateFilter(
-              "maxPrice",
-              val >= priceRange[1] ? undefined : String(val)
-            );
-          }}
+          step={priceStep}
+          value={localMaxPrice}
+          onChange={(e) => handlePriceChange(Number(e.target.value))}
           className="w-full accent-accent"
         />
         <div className="mt-1 flex justify-between text-xs text-dark/40">
@@ -342,22 +442,12 @@ export function CatalogClient({
           </button>
 
           {/* Sort */}
-          <select
+          <SortDropdown
             value={activeFilters.sort}
-            onChange={(e) =>
-              updateFilter(
-                "sort",
-                e.target.value === "default" ? undefined : e.target.value
-              )
+            onChange={(val) =>
+              updateFilter("sort", val === "default" ? undefined : val)
             }
-            className="rounded-full border-2 border-dark bg-white px-5 py-2.5 text-xs font-bold uppercase outline-none transition-colors hover:border-accent focus:border-accent"
-          >
-            <option value="default">По умолчанию</option>
-            <option value="price-asc">Цена ↑</option>
-            <option value="price-desc">Цена ↓</option>
-            <option value="name">По названию</option>
-            <option value="newest">Новинки</option>
-          </select>
+          />
         </div>
       </div>
 
@@ -429,7 +519,7 @@ export function CatalogClient({
           {sortedProducts.length > 0 ? (
             <motion.div
               layout
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
             >
               <AnimatePresence mode="popLayout">
                 {sortedProducts.map((product) => (
@@ -577,7 +667,7 @@ function CatalogProductCard({ product }: { product: SerializedProduct }) {
     <Link href={`/product/${product.slug}`}>
       <div
         className={cn(
-          "product-card relative min-w-[320px] rounded-[var(--radius-apple)] bg-light p-4 text-dark transition-all duration-300 ease-out hover:-translate-y-1.5",
+          "product-card relative min-w-[280px] rounded-[var(--radius-apple)] bg-light p-4 text-dark transition-all duration-300 ease-out hover:-translate-y-1.5 sm:min-w-[320px]",
           !inStock && "opacity-60"
         )}
         style={{ boxShadow: "0 0 0 transparent" }}

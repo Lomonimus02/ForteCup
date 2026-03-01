@@ -14,6 +14,7 @@
 
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { getSiteSettings } from "@/lib/settings";
 import { CatalogClient } from "./CatalogClient";
 
 export const metadata: Metadata = {
@@ -134,7 +135,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   // ──────────────────────────────────────────────
   // include подгружает связанные модели в одном SQL-запросе (LEFT JOIN).
   // Это избегает проблемы N+1 запросов.
-  const [products, categories, allVolumes, visualCategories] = await Promise.all([
+  const [products, categories, allVolumes, allRootCategories, settings, allVariantsForPriceRange, totalProductCount] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy,
@@ -165,17 +166,42 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       orderBy: { id: "asc" },
       select: { id: true, name: true, slug: true, imageUrl: true },
     }),
+
+    getSiteSettings(),
+
+    // Загружаем ВСЕ цены вариантов (без фильтров) для ползунка цен
+    prisma.productVariant.findMany({
+      select: { boxPrice: true },
+    }),
+
+    // Общее количество товаров (без фильтров) для кнопки "Все товары"
+    prisma.product.count(),
   ]);
+
+  // Фильтруем визуальные категории: только выбранные для главной страницы
+  let homepageCatIds: string[] = [];
+  try {
+    const raw = settings.homepageCategoryIds;
+    if (raw) homepageCatIds = JSON.parse(raw) as string[];
+  } catch { /* ignore */ }
+
+  let visualCategories: typeof allRootCategories;
+  if (homepageCatIds.length > 0) {
+    const catMap = new Map(allRootCategories.map((c) => [c.id, c]));
+    visualCategories = homepageCatIds
+      .map((id) => catMap.get(id))
+      .filter((c): c is NonNullable<typeof c> => c != null);
+  } else {
+    visualCategories = allRootCategories.slice(0, 4);
+  }
 
   // Извлекаем список уникальных объёмов (для фасетных фильтров)
   const volumeOptions = allVolumes
     .map((v) => v.volume)
     .filter((v): v is string => v !== null);
 
-  // Считаем диапазон цен коробок для ползунка
-  const allPrices = products.flatMap((p) =>
-    p.variants.map((v) => Number(v.boxPrice))
-  );
+  // Считаем диапазон цен коробок для ползунка (из ВСЕХ вариантов, без фильтров)
+  const allPrices = allVariantsForPriceRange.map((v) => Number(v.boxPrice));
   const priceRange: [number, number] =
     allPrices.length > 0
       ? [Math.min(...allPrices), Math.max(...allPrices)]
@@ -216,7 +242,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       volumeOptions={volumeOptions}
       priceRange={priceRange}
       activeFilters={activeFilters}
-      totalCount={products.length}
+      totalCount={totalProductCount}
     />
   );
 }

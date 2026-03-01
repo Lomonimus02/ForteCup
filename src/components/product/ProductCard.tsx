@@ -21,7 +21,7 @@ export function ProductCard({ product, loading }: ProductCardProps) {
 
   if (loading) {
     return (
-      <div className="product-card min-w-[320px] rounded-[var(--radius-apple)] bg-light p-4">
+      <div className="product-card min-w-[280px] shrink-0 rounded-[var(--radius-apple)] bg-light p-4 sm:min-w-[320px] md:min-w-0 md:shrink">
         <div className="mb-5 h-[260px] animate-pulse rounded-3xl border-2 border-dark/20 bg-dark/10" />
         <div className="h-4 w-20 animate-pulse rounded bg-dark/10" />
         <div className="mt-2 h-6 w-40 animate-pulse rounded bg-dark/10" />
@@ -76,7 +76,7 @@ export function ProductCard({ product, loading }: ProductCardProps) {
     <Link href={`/product/${product.id}`}>
       <div
         className={cn(
-          "product-card relative min-w-[320px] rounded-[var(--radius-apple)] bg-light p-4 text-dark transition-all duration-300 ease-out hover:-translate-y-1.5",
+          "product-card relative min-w-[280px] shrink-0 rounded-[var(--radius-apple)] bg-light p-4 text-dark transition-all duration-300 ease-out hover:-translate-y-1.5 sm:min-w-[320px] md:min-w-0 md:shrink",
           isOutOfStock && "opacity-60"
         )}
         style={{ boxShadow: "0 0 0 transparent" }}
@@ -114,7 +114,7 @@ export function ProductCard({ product, loading }: ProductCardProps) {
         {/* Details */}
         <div>
           <Tag className="mb-2.5">{product.categoryName}</Tag>
-          <h3 className="font-display text-[22px] uppercase leading-tight">
+          <h3 className="text-[22px] font-extrabold uppercase leading-tight">
             {product.name}
           </h3>
 

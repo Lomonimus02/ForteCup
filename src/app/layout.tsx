@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body
-        className={`${spaceGrotesk.variable} ${syne.variable} font-main antialiased`}
+        className={`${spaceGrotesk.variable} ${syne.variable} font-main antialiased overflow-x-hidden`}
       >
         <LayoutShell footer={<Footer />}>{children}</LayoutShell>
         <Toaster position="bottom-center" />

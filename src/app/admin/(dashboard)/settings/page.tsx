@@ -1,8 +1,16 @@
 import { getSettings } from "./actions";
+import { prisma } from "@/lib/prisma";
 import SettingsForm from "./SettingsForm";
 
 export default async function AdminSettingsPage() {
-  const settings = await getSettings();
+  const [settings, categories] = await Promise.all([
+    getSettings(),
+    prisma.category.findMany({
+      where: { parentId: null },
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -15,7 +23,7 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
 
-      <SettingsForm initialData={settings} />
+      <SettingsForm initialData={settings} categories={categories} />
     </div>
   );
 }

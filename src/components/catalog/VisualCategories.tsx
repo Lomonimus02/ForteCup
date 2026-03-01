@@ -23,7 +23,7 @@ export function VisualCategories({ categories }: VisualCategoriesProps) {
   if (categories.length === 0) return null;
 
   return (
-    <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
       {categories.map((cat, i) => {
         const isActive = activeSlug === cat.slug;
         const href = isActive
@@ -40,7 +40,7 @@ export function VisualCategories({ categories }: VisualCategoriesProps) {
             <Link
               href={href}
               scroll={false}
-              className={`group relative block h-[130px] cursor-pointer overflow-hidden border-2 ${
+              className={`group relative block h-24 cursor-pointer overflow-hidden border-2 md:h-32 ${
                 isActive
                   ? "border-accent"
                   : "border-dark"
@@ -54,7 +54,7 @@ export function VisualCategories({ categories }: VisualCategoriesProps) {
                   alt={cat.name}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover"
                 />
               ) : (
                 <div className="absolute inset-0 bg-neutral-200" />

@@ -13,7 +13,8 @@ export function LayoutShell({ children, footer }: LayoutShellProps) {
   return (
     <>
       <Header />
-      <main>{children}</main>
+      {/* pt offsets the fixed header height */}
+      <main className="pt-[52px] sm:pt-[58px] md:pt-[62px]">{children}</main>
       {footer}
       <CartDrawer />
     </>

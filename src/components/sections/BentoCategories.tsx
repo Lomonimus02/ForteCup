@@ -27,7 +27,7 @@ export function BentoCategories({ categories }: BentoCategoriesProps) {
 
   return (
     <section className="px-5 py-20">
-      <h2 className="mx-auto max-w-[1400px] font-display text-[40px] uppercase">
+      <h2 className="mx-auto max-w-[1400px] font-display text-2xl uppercase sm:text-[32px] md:text-[40px]">
         Категории ↘
       </h2>
 
@@ -60,12 +60,12 @@ export function BentoCategories({ categories }: BentoCategoriesProps) {
                   src={cat.imageUrl}
                   alt={cat.name}
                   fill
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-dark/5">
-                  <span className="font-display text-xl font-extrabold text-dark/20 uppercase">
+                  <span className="text-xl font-extrabold text-dark/20 uppercase">
                     {cat.name}
                   </span>
                 </div>

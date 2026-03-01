@@ -11,9 +11,9 @@ export function ProductGrid({ products }: ProductGridProps) {
   if (products.length === 0) return null;
 
   return (
-    <section className="overflow-hidden bg-dark py-24 text-light">
+    <section className="overflow-hidden bg-dark py-12 text-light md:py-24">
       <div className="mx-auto max-w-[1400px] px-5 text-center">
-        <h2 className="font-display text-[40px] uppercase text-accent">
+        <h2 className="font-display text-2xl uppercase text-accent sm:text-[32px] md:text-[40px]">
           Хиты продаж{" "}
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +28,16 @@ export function ProductGrid({ products }: ProductGridProps) {
         </h2>
       </div>
 
-      <div className="mt-10 flex justify-center gap-8 overflow-x-auto px-10 pb-14 pt-4 hide-scrollbar">
+      {/* Mobile: horizontal scroll, Tablet+: grid */}
+      <div className="mt-8 flex gap-5 overflow-x-auto px-5 pb-10 pt-4 snap-x snap-mandatory md:hidden hide-scrollbar">
+        {products.map((product) => (
+          <div key={product.id} className="snap-start">
+            <ProductCard product={product} />
+          </div>
+        ))}
+      </div>
+
+      <div className="mx-auto mt-10 hidden max-w-[1400px] grid-cols-2 gap-6 px-5 pb-14 md:grid lg:grid-cols-3 xl:grid-cols-4">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

@@ -74,14 +74,14 @@ export function Hero({ title, subtitle, imageUrl }: HeroProps) {
   return (
     <section className="grid min-h-[85vh] grid-cols-1 border-b-2 border-dark lg:grid-cols-[1.2fr_0.8fr]">
       {/* Text side */}
-      <div className="flex flex-col justify-center border-dark bg-light px-6 py-10 md:px-16 lg:border-r-2 lg:py-16">
+      <div className="flex flex-col justify-center border-dark bg-light px-4 py-8 md:px-16 lg:border-r-2 lg:py-16">
         <Tag className="mb-5 w-fit">МОСКВА / РФ</Tag>
 
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="font-display text-[12vw] font-extrabold uppercase leading-[0.85] text-dark lg:text-[7vw]"
+          className="font-display text-5xl font-extrabold uppercase leading-[0.85] text-dark md:text-[7vw]"
         >
           {lines.map((line, i) => renderStyledLine(line, i))}
         </motion.h1>
@@ -108,7 +108,7 @@ export function Hero({ title, subtitle, imageUrl }: HeroProps) {
       </div>
 
       {/* Visual side */}
-      <div className="flex items-center justify-center bg-light p-5 lg:p-6">
+      <div className="flex items-center justify-center bg-light p-4 md:p-5 lg:p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

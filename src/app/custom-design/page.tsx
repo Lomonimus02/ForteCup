@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { DesignRequestForm } from "./DesignRequestForm";
+import { Package, Paintbrush, Zap } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Индивидуальный дизайн",
@@ -14,17 +15,17 @@ const advantages = [
   {
     title: "Тираж от 1 000 шт",
     desc: "Минимальный заказ всего 1 000 стаканов. Идеально для старта и тестирования дизайна.",
-    icon: "📦",
+    icon: Package,
   },
   {
     title: "Бесплатный макет",
     desc: "Наш дизайнер подготовит макет с вашим логотипом бесплатно. Утверждаете — запускаем.",
-    icon: "🎨",
+    icon: Paintbrush,
   },
   {
     title: "Сроки от 5 дней",
     desc: "Производство и печать от 5 рабочих дней. Срочные заказы обсуждаются индивидуально.",
-    icon: "⚡",
+    icon: Zap,
   },
 ];
 
@@ -55,7 +56,7 @@ export default async function CustomDesignPage() {
             <h1 className="font-display text-5xl font-extrabold uppercase lg:text-7xl leading-[0.95]">
               Твой бренд
               <br />
-              <span className="text-accent [-webkit-text-stroke:2px_var(--color-dark)] [paint-order:stroke_fill]">
+              <span className="underline decoration-accent decoration-[6px] underline-offset-[6px]">
                 на стакане
               </span>
             </h1>
@@ -81,10 +82,10 @@ export default async function CustomDesignPage() {
           <div className="relative">
             <div className="aspect-square rounded-[36px] border-2 border-dark bg-dark/5 flex items-center justify-center overflow-hidden">
               <div className="text-center p-8">
-                <p className="font-display text-8xl font-extrabold text-dark/10">
-                  CUP
+                <p className="font-display text-7xl font-extrabold uppercase tracking-tight text-dark/8 lg:text-8xl">
+                  Forte
                 </p>
-                <p className="text-sm text-dark/30 mt-2 uppercase tracking-widest">
+                <p className="text-xs font-bold text-dark/30 mt-3 uppercase tracking-[0.3em]">
                   Ваш логотип здесь
                 </p>
               </div>
@@ -113,7 +114,9 @@ export default async function CustomDesignPage() {
                 key={adv.title}
                 className="rounded-[36px] border-2 border-neutral-700 p-8 text-center transition-shadow hover:shadow-[4px_4px_0_var(--color-accent)]"
               >
-                <span className="text-4xl">{adv.icon}</span>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-2 border-accent">
+                  <adv.icon size={24} className="text-accent" strokeWidth={2} />
+                </div>
                 <h3 className="mt-4 font-display text-lg font-extrabold uppercase text-light">
                   {adv.title}
                 </h3>

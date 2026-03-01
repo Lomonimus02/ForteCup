@@ -69,7 +69,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {product.categoryName}
         </Link>
         <span className="mx-2 text-dark/30">/</span>
-        <span className="font-bold">{product.name}</span>
+        <span className="font-bold truncate">{product.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
@@ -105,10 +105,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-col justify-center">
+        <div className="flex min-w-0 flex-col justify-center">
           {product.isPopular && <Tag>Хит</Tag>}
 
-          <h1 className="mt-4 font-display text-5xl font-extrabold uppercase leading-tight lg:text-6xl">
+          <h1
+            className="mt-4 font-display text-3xl font-extrabold uppercase leading-tight break-words sm:text-5xl lg:text-6xl"
+            style={{ overflowWrap: "anywhere" }}
+          >
             {product.name}
           </h1>
 
@@ -155,7 +158,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
           {/* Selected Variant Meta */}
           {selectedVariant && (
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-4 overflow-x-auto">
               <div className="rounded-2xl border-2 border-dark px-5 py-3">
                 <p className="text-xs font-bold uppercase text-dark/50">
                   Артикул

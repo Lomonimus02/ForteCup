@@ -27,44 +27,46 @@
 
 /* ---- Base Reset ---- */
 
-html {
-  scrollbar-gutter: stable;
-}
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
 
-body {
-  background-color: var(--color-light);
-  color: var(--color-dark);
-  font-family: var(--font-main);
-  overflow-x: hidden;
-}
+  body {
+    background-color: var(--color-light);
+    color: var(--color-dark);
+    font-family: var(--font-main);
+    overflow-x: hidden;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 
-button,
-[role="button"],
-label,
-select,
-summary {
-  cursor: pointer;
-}
+  button,
+  [role="button"],
+  label,
+  select,
+  summary {
+    cursor: pointer;
+  }
 
-ul {
-  list-style: none;
-}
+  ul {
+    list-style: none;
+  }
 
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-light);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-dark);
-  border-radius: 4px;
+  /* ---- Scrollbar ---- */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-light);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-dark);
+    border-radius: 4px;
+  }
 }
 
 /* ---- Hide scrollbar on product scroll ---- */
@@ -104,10 +106,11 @@ ul {
   animation: float 4s ease-in-out infinite;
 }
 
-/* ---- Menu link hover: strikethrough ---- */
+/* ---- Menu link hover: underline ---- */
 .menu-link:hover {
-  text-decoration: line-through;
+  text-decoration: underline;
   text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
   text-decoration-color: var(--color-accent);
 }
 

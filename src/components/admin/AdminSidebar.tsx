@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   Menu,
   StickyNote,
+  PenTool,
 } from "lucide-react";
 import { useState } from "react";
 import { logoutAction } from "@/app/admin/login/actions";
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/admin/products", label: "Товары", icon: Package },
   { href: "/admin/categories", label: "Категории", icon: FolderOpen },
   { href: "/admin/orders", label: "Заказы", icon: ShoppingCart },
+  { href: "/admin/design-requests", label: "Заявки на дизайн", icon: PenTool },
   { href: "/admin/pages", label: "Страницы", icon: StickyNote },
   { href: "/admin/blog", label: "Блог", icon: FileText },
   { href: "/admin/portfolio", label: "Портфолио", icon: Image },

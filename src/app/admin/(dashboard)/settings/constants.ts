@@ -5,6 +5,7 @@ export const SETTINGS_KEYS = [
   "heroSubtitle",
   "heroImageUrl",
   "marqueeText",
+  "homepageCategoryIds",
   "contactPhone",
   "contactEmail",
   "contactAddress",
