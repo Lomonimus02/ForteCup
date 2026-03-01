@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+/* ============================
+   FORTE CUP — Brutalist + Apple
+   Design System (Tailwind v4)
+   ============================ */
+
+@theme inline {
+  /* Brand Colors */
+  --color-accent: #FFD600;
+  --color-dark: #0D0D0D;
+  --color-light: #F4F4F0;
+  --color-white: #FFFFFF;
+
+  /* Apple-style radius */
+  --radius-apple: 36px;
+  --radius-pill: 100px;
+
+  /* Spacing scale */
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+
+  /* Fonts */
+  --font-main: "Space Grotesk", sans-serif;
+  --font-display: "Syne", sans-serif;
+}
+
+/* ---- Base Reset ---- */
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--color-light);
+  color: var(--color-dark);
+  font-family: var(--font-main);
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button,
+[role="button"],
+label,
+select,
+summary {
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-light);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark);
+  border-radius: 4px;
+}
+
+/* ---- Hide scrollbar on product scroll ---- */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Marquee Animation ---- */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 20s linear infinite;
+}
+
+/* ---- Float keyframe for stickers ---- */
+@keyframes float {
+  0%, 100% {
+    transform: rotate(-15deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-15deg) translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* ---- Menu link hover: strikethrough ---- */
+.menu-link:hover {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--color-accent);
+}
+
+/* ---- Selection color ---- */
+::selection {
+  background: var(--color-accent);
+  color: var(--color-dark);
+}
+
+/* ---- CMS Content Styles ---- */
+.cms-content h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+.cms-content h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+.cms-content p {
+  color: rgba(13, 13, 13, 0.65);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  max-width: 720px;
+}
+.cms-content ul,
+.cms-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: rgba(13, 13, 13, 0.65);
+  line-height: 1.8;
+}
+.cms-content ul {
+  list-style-type: disc;
+}
+.cms-content ol {
+  list-style-type: decimal;
+}
+.cms-content li {
+  margin-bottom: 0.5rem;
+}
+.cms-content a {
+  color: var(--color-dark);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+.cms-content a:hover {
+  color: var(--color-accent);
+}
+.cms-content strong {
+  font-weight: 700;
+  color: var(--color-dark);
+}
+.cms-content img {
+  border-radius: var(--radius-apple);
+  border: 2px solid var(--color-dark);
+  margin: 2rem 0;
+  max-width: 100%;
+}
+.cms-content blockquote {
+  border-left: 4px solid var(--color-accent);
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: rgba(13, 13, 13, 0.5);
+}

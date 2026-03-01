@@ -1,0 +1,245 @@
+// =========================================
+// FORTE CUP — Prisma Schema
+// PostgreSQL + Prisma ORM для Next.js 14/15
+// =========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:postgres@localhost:5432/forte_cup?schema=public"
+}
+
+// ─── Пользователи и авторизация ──────────────────────
+
+/// Роль пользователя
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+/// Пользователь (для Admin-панели и авторизации)
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String /// bcrypt hash
+  name         String?
+  role         UserRole @default(CUSTOMER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@map("users")
+}
+
+// ─── Глобальные настройки сайта ──────────────────────
+
+/// Key-value хранилище для текстов и настроек сайта.
+/// Ключи: heroTitle, heroDescription, marqueeText,
+///        contactEmail, contactPhone, instagramLink и т.д.
+model SiteSettings {
+  key   String @id /// Уникальный ключ настройки
+  value String @db.Text /// Значение (текст, URL, JSON)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ─── Каталог ─────────────────────────────────────────
+
+/// Категория товаров (дерево: родитель → дети).
+/// Пример: "Аксессуары" → "Крышки", "Холдеры"
+model Category {
+  id       String  @id @default(cuid())
+  name     String /// Отображаемое название, напр. "ДВУХСЛОЙНЫЕ СТАКАНЫ"
+  slug     String  @unique /// URL-safe идентификатор, напр. "double-wall"
+  imageUrl String? /// URL изображения категории
+
+  /// Связь «родитель — дети» для подкатегорий
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+/// Основной товар (группа вариантов)
+model Product {
+  id           String  @id @default(cuid())
+  name         String /// Название товара, напр. "Blackout Double"
+  slug         String  @unique /// URL-safe идентификатор
+  description  String? @db.Text /// Подробное описание (HTML/Markdown допустим)
+  imageBaseUrl String? /// Основное изображение товара (URL)
+  isPopular    Boolean @default(false) /// Флаг «Хит продаж» для промо-блоков
+  isDraft      Boolean @default(false) /// Черновик — скрыт из каталога
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isPopular])
+  @@index([isDraft])
+  @@map("products")
+}
+
+/// Вариант товара — B2B оптовая модель.
+/// Каждый вариант = конкретный SKU с ценой за штуку и коробку.
+/// Для стаканов: volume = "165 мл", colorOrDesign = "Джентельмен"
+/// Для крышек:   volume = null, colorOrDesign = "Белый"
+model ProductVariant {
+  id            String  @id @default(cuid())
+  sku           String  @unique /// Артикул, напр. "DW-165-GENT-3000"
+
+  volume        String? /// Объём ("165 мл", "250 мл"), null для аксессуаров
+  colorOrDesign String? /// Дизайн / цвет ("Джентельмен", "Белый")
+
+  pricePerPiece Decimal @db.Decimal(10, 2) /// Цена за 1 шт, напр. 2.00 ₽
+  piecesPerBox  Int     /// Кол-во штук в коробке (шаг корзины), напр. 3000
+  boxPrice      Decimal @db.Decimal(10, 2) /// Итоговая цена коробки, напр. 6000.00 ₽
+
+  inStock       Boolean @default(true) /// В наличии
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ─── Заказы ──────────────────────────────────────────
+
+/// Статус заказа (расширенный для канбан-доски в админке)
+enum OrderStatus {
+  PENDING   /// Новый — ожидает обработки
+  PAID      /// Оплачен
+  ASSEMBLED /// Собран на складе
+  SHIPPED   /// Отправлен
+  CANCELLED /// Отменён
+}
+
+/// Заказ покупателя
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   Int         @unique @default(autoincrement()) /// Человекочитаемый номер заказа
+  customerName  String /// ФИО покупателя
+  customerEmail String /// Email для уведомлений
+  customerPhone String /// Телефон
+  address       String? /// Адрес доставки
+  city          String? /// Город
+  postalCode    String? /// Почтовый индекс
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(PENDING)
+  notes         String?     @db.Text /// Комментарий к заказу
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+/// Позиция заказа (связь Order ↔ ProductVariant + снимок цены)
+model OrderItem {
+  id              String  @id @default(cuid())
+  quantity        Int
+  priceAtPurchase Decimal @db.Decimal(10, 2) /// Цена на момент покупки (snapshot)
+
+  orderId String
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+
+  /// Денормализованная связь с Product для быстрых JOIN-ов
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([variantId])
+  @@map("order_items")
+}
+
+// ─── Контент (Блог + Портфолио) ─────────────────────
+
+/// Статья блога
+model Post {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String    @db.Text /// Полный текст статьи (Markdown/HTML)
+  imageUrl    String? /// Обложка статьи
+  publishedAt DateTime? /// null = черновик, дата = опубликовано
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([publishedAt])
+  @@map("posts")
+}
+
+/// Портфолио: кейсы брендирования стаканов для клиентов
+model Portfolio {
+  id           String   @id @default(cuid())
+  clientName   String /// Название клиента / заведения
+  description  String?  @db.Text /// Описание кейса
+  imageUrl     String? /// Главное фото кейса
+  imageGallery String[] /// Массив URL-ов изображений (PostgreSQL native array)
+  isPublished  Boolean  @default(false) /// Опубликован на сайте
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("portfolios")
+}
+
+// ─── CMS-страницы ────────────────────────────────────
+
+/// Динамическая текстовая страница (О нас, Доставка, и т.д.)
+model Page {
+  id          String  @id @default(cuid())
+  title       String /// Заголовок страницы
+  slug        String  @unique /// URL-идентификатор (delivery, about)
+  content     String  @db.Text /// HTML-контент страницы
+  isPublished Boolean @default(false) /// Опубликована ли
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@map("pages")
+}
+
+// ─── Заявки на дизайн ────────────────────────────────
+
+/// Заявка на индивидуальный дизайн стакана
+model DesignRequest {
+  id        String  @id @default(cuid())
+  name      String /// Имя клиента
+  phone     String /// Телефон
+  quantity  String? /// Тираж
+  comment   String? @db.Text /// Комментарий
+  isRead    Boolean @default(false) /// Прочитана менеджером
+
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@map("design_requests")
+}
