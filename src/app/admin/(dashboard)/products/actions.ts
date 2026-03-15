@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/lib/prisma";
+import { deleteUploadedFile } from "@/app/admin/upload-action";
 
 // ─── Types for the form payload ──────────
 
@@ -70,6 +71,14 @@ export async function upsertProduct(data: ProductInput) {
   }
 
   try {
+    // Delete old image if changed
+    if (data.id) {
+      const existingProduct = await prisma.product.findUnique({ where: { id: data.id } });
+      if (existingProduct?.imageBaseUrl && existingProduct.imageBaseUrl !== data.imageBaseUrl) {
+        await deleteUploadedFile(existingProduct.imageBaseUrl);
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Upsert product
       const product = data.id
@@ -197,6 +206,9 @@ export async function deleteProduct(id: string) {
   if (orderItemsCount > 0) {
     return { error: `Нельзя удалить: товар присутствует в ${orderItemsCount} позици(ях) заказов` };
   }
+
+  const existing = await prisma.product.findUnique({ where: { id } });
+  if (existing?.imageBaseUrl) await deleteUploadedFile(existing.imageBaseUrl);
 
   await prisma.product.delete({ where: { id } });
 

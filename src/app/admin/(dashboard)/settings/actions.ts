@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { SETTINGS_KEYS } from "./constants";
+import { deleteUploadedFile } from "@/app/admin/upload-action";
 
 // ─── getSettings ─────────────────────────
 
@@ -21,6 +22,12 @@ export async function updateSettings(
   data: Record<string, string>
 ): Promise<{ success?: boolean; error?: string }> {
   try {
+    // Delete old image if heroImageUrl changed
+    const oldHero = await prisma.siteSettings.findUnique({ where: { key: "heroImageUrl" } });
+    if (oldHero?.value && data.heroImageUrl !== oldHero.value) {
+      await deleteUploadedFile(oldHero.value);
+    }
+
     // Upsert каждого ключа в транзакции
     await prisma.$transaction(
       SETTINGS_KEYS.map((key) =>

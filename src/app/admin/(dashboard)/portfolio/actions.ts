@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/lib/prisma";
+import { deleteUploadedFile } from "@/app/admin/upload-action";
 
 // ─── Types ───────────────────────────────
 
@@ -24,6 +25,11 @@ export async function upsertPortfolioWork(data: PortfolioInput) {
 
   try {
     if (data.id) {
+      const existing = await prisma.portfolio.findUnique({ where: { id: data.id } });
+      if (existing?.imageUrl && existing.imageUrl !== data.imageUrl) {
+        await deleteUploadedFile(existing.imageUrl);
+      }
+
       await prisma.portfolio.update({
         where: { id: data.id },
         data: {
@@ -57,6 +63,9 @@ export async function upsertPortfolioWork(data: PortfolioInput) {
 
 export async function deletePortfolioWork(id: string) {
   try {
+    const existing = await prisma.portfolio.findUnique({ where: { id } });
+    if (existing?.imageUrl) await deleteUploadedFile(existing.imageUrl);
+
     await prisma.portfolio.delete({ where: { id } });
     revalidatePath("/admin/portfolio");
     return { success: true };

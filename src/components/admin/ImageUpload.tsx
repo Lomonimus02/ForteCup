@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { Upload, X, Loader2, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
-import { uploadFile } from "@/app/admin/upload-action";
+import { uploadFile, deleteUploadedFile } from "@/app/admin/upload-action";
 
 interface ImageUploadProps {
   value: string;
@@ -30,12 +30,14 @@ export function ImageUpload({ value, onChange, label }: ImageUploadProps) {
 
       setIsUploading(true);
       try {
+        const oldUrl = value;
         const fd = new FormData();
         fd.append("file", file);
         const result = await uploadFile(fd);
 
         if (result.success) {
           onChange(result.url);
+          if (oldUrl) await deleteUploadedFile(oldUrl);
           toast.success("Изображение загружено");
         } else {
           toast.error(result.error);
@@ -47,7 +49,7 @@ export function ImageUpload({ value, onChange, label }: ImageUploadProps) {
         if (inputRef.current) inputRef.current.value = "";
       }
     },
-    [onChange]
+    [onChange, value]
   );
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -78,6 +80,7 @@ export function ImageUpload({ value, onChange, label }: ImageUploadProps) {
   }
 
   function handleRemove() {
+    if (value) deleteUploadedFile(value);
     onChange("");
   }
 

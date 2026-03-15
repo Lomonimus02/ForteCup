@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { deleteUploadedFile } from "@/app/admin/upload-action";
 
 // ─── Create Category ─────────────────────
 
@@ -55,6 +56,11 @@ export async function updateCategory(formData: FormData) {
     return { error: "Категория не может быть родителем самой себе" };
   }
 
+  const current = await prisma.category.findUnique({ where: { id } });
+  if (current?.imageUrl && current.imageUrl !== imageUrl) {
+    await deleteUploadedFile(current.imageUrl);
+  }
+
   await prisma.category.update({
     where: { id },
     data: { name, slug, parentId, imageUrl },
@@ -84,6 +90,9 @@ export async function deleteCategory(id: string) {
   if (childrenCount > 0) {
     return { error: `Нельзя удалить: есть ${childrenCount} подкатегори(й)` };
   }
+
+  const cat = await prisma.category.findUnique({ where: { id } });
+  if (cat?.imageUrl) await deleteUploadedFile(cat.imageUrl);
 
   await prisma.category.delete({ where: { id } });
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/lib/prisma";
+import { deleteUploadedFile } from "@/app/admin/upload-action";
 
 // ─── Types ───────────────────────────────
 
@@ -40,6 +41,10 @@ export async function upsertPost(data: PostInput) {
     if (data.id) {
       // При обновлении: если уже опубликован — не трогаем publishedAt
       const existing = await prisma.post.findUnique({ where: { id: data.id } });
+      if (existing?.imageUrl && existing.imageUrl !== data.imageUrl) {
+        await deleteUploadedFile(existing.imageUrl);
+      }
+
       const finalPublishedAt = data.isPublished
         ? existing?.publishedAt ?? new Date()
         : null;
@@ -79,6 +84,9 @@ export async function upsertPost(data: PostInput) {
 
 export async function deletePost(id: string) {
   try {
+    const existing = await prisma.post.findUnique({ where: { id } });
+    if (existing?.imageUrl) await deleteUploadedFile(existing.imageUrl);
+
     await prisma.post.delete({ where: { id } });
     revalidatePath("/admin/blog");
     return { success: true };

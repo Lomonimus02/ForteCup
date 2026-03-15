@@ -1,6 +1,6 @@
 "use server";
 
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink, access } from "fs/promises";
 import path from "path";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -52,5 +52,21 @@ export async function uploadFile(
   } catch (error) {
     console.error("[uploadFile] Error:", error);
     return { success: false, error: "Ошибка загрузки файла на сервер" };
+  }
+}
+
+// ─── Delete uploaded file from disk ──────
+
+export async function deleteUploadedFile(url: string): Promise<void> {
+  if (!url || !url.startsWith("/uploads/")) return;
+
+  const fileName = path.basename(url);
+  const filePath = path.join(process.cwd(), "public", "uploads", fileName);
+
+  try {
+    await access(filePath);
+    await unlink(filePath);
+  } catch {
+    // File doesn't exist or already deleted — ignore
   }
 }
