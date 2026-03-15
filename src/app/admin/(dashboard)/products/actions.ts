@@ -97,16 +97,65 @@ export async function upsertProduct(data: ProductInput) {
             },
           });
 
-      // 2. Delete all existing variants and recreate
-      // Это проще чем diff, и для B2B каталога это нормально
+      // 2. Sync variants: upsert existing, create new, delete orphans
+      // Cannot delete variants referenced by orders (FK constraint)
       if (data.id) {
-        await tx.productVariant.deleteMany({
+        const incomingSkus = data.variants.map((v) => v.sku);
+
+        // Delete only variants that are NOT referenced by any order item
+        const existingVariants = await tx.productVariant.findMany({
           where: { productId: product.id },
+          select: { id: true, sku: true },
         });
+
+        const orphanIds = existingVariants
+          .filter((v) => !incomingSkus.includes(v.sku))
+          .map((v) => v.id);
+
+        if (orphanIds.length > 0) {
+          // Only delete orphans that have no order items
+          await tx.productVariant.deleteMany({
+            where: {
+              id: { in: orphanIds },
+              orderItems: { none: {} },
+            },
+          });
+        }
+
+        // Upsert each variant by SKU
+        for (const v of data.variants) {
+          const existing = existingVariants.find((ev) => ev.sku === v.sku);
+          if (existing) {
+            await tx.productVariant.update({
+              where: { id: existing.id },
+              data: {
+                volume: v.volume || null,
+                colorOrDesign: v.colorOrDesign || null,
+                pricePerPiece: v.pricePerPiece,
+                piecesPerBox: v.piecesPerBox,
+                boxPrice: v.boxPrice,
+                inStock: v.inStock,
+              },
+            });
+          } else {
+            await tx.productVariant.create({
+              data: {
+                productId: product.id,
+                sku: v.sku,
+                volume: v.volume || null,
+                colorOrDesign: v.colorOrDesign || null,
+                pricePerPiece: v.pricePerPiece,
+                piecesPerBox: v.piecesPerBox,
+                boxPrice: v.boxPrice,
+                inStock: v.inStock,
+              },
+            });
+          }
+        }
       }
 
-      // 3. Create all variants
-      if (data.variants.length > 0) {
+      // 3. Create all variants (new product)
+      if (!data.id && data.variants.length > 0) {
         await tx.productVariant.createMany({
           data: data.variants.map((v) => ({
             productId: product.id,
