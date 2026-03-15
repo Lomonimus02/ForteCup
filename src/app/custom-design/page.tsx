@@ -140,7 +140,7 @@ export default async function CustomDesignPage() {
               key={step.num}
               className="rounded-3xl border-2 border-dark p-6 relative"
             >
-              <span className="font-display text-4xl font-extrabold text-accent/30">
+              <span className="font-display text-4xl font-extrabold text-dark/20">
                 {step.num}
               </span>
               <h3 className="mt-2 text-sm font-bold uppercase tracking-wide">
@@ -155,20 +155,22 @@ export default async function CustomDesignPage() {
       </section>
 
       {/* ─── Portfolio Works ──────────────────── */}
-      {portfolioWorks.length > 0 && (
-        <section id="works" className="bg-dark/5 py-16 lg:py-20">
-          <div className="mx-auto max-w-[1400px] px-5">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="font-display text-4xl font-extrabold uppercase lg:text-5xl">
-                Примеры работ
-              </h2>
+      <section id="works" className="bg-dark/5 py-16 lg:py-20">
+        <div className="mx-auto max-w-[1400px] px-5">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="font-display text-4xl font-extrabold uppercase lg:text-5xl">
+              Примеры работ
+            </h2>
+            {portfolioWorks.length > 0 && (
               <Link
                 href="/portfolio"
                 className="text-sm font-bold uppercase tracking-wide text-dark/50 hover:text-dark transition"
               >
                 Все работы →
               </Link>
-            </div>
+            )}
+          </div>
+          {portfolioWorks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {portfolioWorks.map((work) => (
                 <div
@@ -203,9 +205,14 @@ export default async function CustomDesignPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="rounded-[36px] border-2 border-dashed border-dark/20 py-16 flex flex-col items-center justify-center text-center">
+              <p className="font-display text-5xl font-extrabold text-dark/8">FORTE</p>
+              <p className="mt-4 text-sm text-dark/40">Скоро здесь появятся примеры наших работ</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ─── Request Form ─────────────────────── */}
       <section id="request" className="mx-auto max-w-[1400px] px-5 py-16 lg:py-20">
